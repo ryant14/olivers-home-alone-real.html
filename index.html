@@ -1,2 +1,129 @@
 <!doctype html>
-<html><body><h1>HOME WORKS</h1></body></html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Oliver’s Home Alone Games</title>
+  <style>
+    :root{
+      --bg1:#0b1020; --bg2:#070a12;
+      --card:rgba(255,255,255,.06);
+      --line:rgba(255,255,255,.14);
+      --text:#e6edf6; --muted:#a7b3c7;
+      --accent:#60a5fa;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; min-height:100vh;
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(1100px 700px at 50% -10%, #1a2a55, transparent 60%),
+        radial-gradient(900px 600px at 10% 20%, #0f3a2a, transparent 55%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+      display:flex; align-items:center; justify-content:center;
+      padding:18px;
+    }
+    .wrap{width:min(920px,100%); display:grid; gap:14px;}
+    .header{
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:16px;
+      background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
+    }
+    h1{margin:0 0 6px; font-size:28px;}
+    p{margin:0; color:var(--muted); line-height:1.4}
+    .grid{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+    @media (max-width: 700px){ .grid{grid-template-columns:1fr;} }
+    .card{
+      border:1px solid var(--line);
+      border-radius:16px;
+      background: var(--card);
+      padding:14px;
+    }
+    .card h2{margin:0 0 8px; font-size:16px}
+    a.btn{
+      display:flex; justify-content:space-between; align-items:center; gap:10px;
+      margin-top:10px;
+      text-decoration:none;
+      color:var(--text);
+      border:1px solid rgba(96,165,250,.35);
+      background: rgba(96,165,250,.10);
+      padding:12px;
+      border-radius:14px;
+      font-weight:800;
+      transition: transform .08s ease, border-color .08s ease;
+    }
+    a.btn:hover{ transform: translateY(-1px); border-color: rgba(96,165,250,.65); }
+    .tag{
+      font-size:12px; color:var(--muted);
+      border:1px solid rgba(255,255,255,.16);
+      padding:4px 8px; border-radius:999px; white-space:nowrap;
+      background: rgba(255,255,255,.03);
+    }
+    .small{font-size:13px; color:var(--muted); line-height:1.45; margin-top:8px}
+    kbd{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size:12px;
+      padding:2px 6px;
+      border-radius:6px;
+      border:1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+    }
+    .footer{font-size:12px; color:var(--muted); text-align:center; padding:6px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <h1>Oliver’s Home Alone Games</h1>
+      <p>Pick a game. If it’s POV, click the game screen to capture the mouse.</p>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>🏠 Home Alone (POV)</h2>
+        <p class="small">Spooky house-sitting. Do chores. Don’t open the door.</p>
+
+        <!-- CHANGE the filename below to match your real file -->
+        <a class="btn" href="./olivers-home-alone.html">
+          Play Home Alone
+          <span class="tag">POV</span>
+        </a>
+
+        <p class="small">
+          Controls: <kbd>WASD</kbd> move • <kbd>E</kbd> interact • <kbd>Esc</kbd> release mouse
+        </p>
+      </div>
+
+      <div class="card">
+        <h2>🕯️ Midnight Errands (Carson-style)</h2>
+        <p class="small">Original spooky “neighbor house” episode with texts + tasks.</p>
+
+        <!-- CHANGE the filename below to match your real file -->
+        <a class="btn" href="./carsons-house-like.html">
+          Play Midnight Errands
+          <span class="tag">POV + Phone</span>
+        </a>
+
+        <p class="small">
+          Tip: if you see gray stripes, press <kbd>Start</kbd> and click inside the game.
+        </p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>🧪 Troubleshooting</h2>
+      <p class="small">
+        If a button gives a 404, the filename doesn’t match. Go to the repo and copy the file name exactly.
+        Filenames must match dashes/spaces/capitals perfectly.
+      </p>
+    </div>
+
+    <div class="footer">
+      Built on GitHub Pages • ryant14.github.io/olivers-home-alone/
+    </div>
+  </div>
+</body>
+</html>
