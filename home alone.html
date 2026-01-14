@@ -1,0 +1,1119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Night Watch: POV Deluxe (Original)</title>
+  <style>
+    :root{
+      --bg:#0b0f14; --ui:#0f172a; --ui2:#111827;
+      --line:rgba(255,255,255,.12); --ink:#e5e7eb; --muted:#94a3b8;
+      --accent:#60a5fa; --warn:#fb7185; --ok:#34d399; --shadow:rgba(0,0,0,.45);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background: radial-gradient(1100px 700px at 50% 0%, #1b2434, var(--bg));
+      color:var(--ink); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:12px;
+    }
+    .wrap{width:min(1250px,100%); display:grid; grid-template-columns: 1.5fr .5fr; gap:12px;}
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid var(--line); border-radius:14px; box-shadow: 0 14px 34px var(--shadow);
+      overflow:hidden;
+    }
+    .topbar{
+      display:flex; justify-content:space-between; align-items:center; gap:10px;
+      padding:10px 12px; border-bottom:1px solid var(--line); background: rgba(255,255,255,.03);
+    }
+    .topbar b{font-size:14px}
+    .topbar small{display:block; color:var(--muted); font-size:12px}
+    .hud{display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end}
+    .pill{
+      font-size:12px; color:var(--muted); padding:6px 10px; border-radius:999px;
+      border:1px solid var(--line); background: rgba(255,255,255,.03); white-space:nowrap;
+    }
+    .pill strong{color:var(--ink)}
+    .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle;background:var(--ok);box-shadow:0 0 0 3px rgba(52,211,153,.15)}
+    .pill.warn .dot{background:var(--warn);box-shadow:0 0 0 3px rgba(251,113,133,.15)}
+
+    .game{display:grid; grid-template-rows: auto 1fr auto; height: 780px; max-height: 92vh;}
+    canvas{width:100%; height:auto; display:block; background:#070b10; cursor:crosshair;}
+
+    .dialogue{
+      border-top:1px solid var(--line); background: rgba(17,24,39,.92);
+      padding:12px; display:grid; gap:10px;
+    }
+    .speakerRow{display:flex; justify-content:space-between; align-items:center; gap:10px;}
+    .speaker{font-weight:800; letter-spacing:.2px; font-size:13px}
+    .meta{color:var(--muted); font-size:12px}
+    .text{font-size:14px; line-height:1.45; min-height:44px;}
+    .choices{display:flex; gap:8px; flex-wrap:wrap;}
+    button{
+      border:1px solid var(--line); background: rgba(255,255,255,.04); color:var(--ink);
+      padding:9px 10px; border-radius:12px; cursor:pointer;
+      transition: transform .06s ease, border-color .06s ease; font-weight:650; font-size:12px;
+    }
+    button:hover{transform: translateY(-1px); border-color: rgba(96,165,250,.45)}
+    button:disabled{opacity:.45; cursor:not-allowed; transform:none}
+    .primary{border-color: rgba(96,165,250,.45); background: rgba(96,165,250,.08)}
+    .danger{border-color: rgba(251,113,133,.45); background: rgba(251,113,133,.08)}
+
+    .phone{display:flex; flex-direction:column; height: 780px; max-height: 92vh;}
+    .msgs{padding:10px; overflow:auto; flex:1; display:flex; flex-direction:column; gap:10px;}
+    .msg{
+      max-width: 95%; padding:10px; border-radius:14px;
+      border:1px solid var(--line); background: rgba(255,255,255,.03);
+      font-size:12.5px; line-height:1.35;
+    }
+    .them{align-self:flex-start; border-top-left-radius:6px}
+    .me{align-self:flex-end; border-top-right-radius:6px; background: rgba(96,165,250,.08); border-color: rgba(96,165,250,.22)}
+    .msg small{display:block; margin-top:5px; color:var(--muted); font-size:11px}
+
+    .phoneFooter{
+      border-top:1px solid var(--line); padding:10px; display:flex; gap:8px;
+      background: rgba(255,255,255,.02);
+    }
+    input{
+      flex:1; padding:10px; border-radius:12px; border:1px solid var(--line);
+      background: rgba(0,0,0,.18); color:var(--ink); outline:none; font-size:12.5px;
+    }
+    .hint{
+      color:var(--muted); font-size:12px; padding:10px 12px;
+      border-top:1px solid var(--line); background: rgba(255,255,255,.02);
+    }
+    kbd{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size:11px; padding:2px 6px; border-radius:6px;
+      border:1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.06); color: var(--ink);
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card game">
+    <div class="topbar">
+      <div>
+        <b>Night Watch: POV Deluxe (Original)</b>
+        <small>Move: <kbd>WASD</kbd> • Look: mouse • Interact: <kbd>E</kbd> • Flashlight: <kbd>F</kbd> • Inventory: <kbd>I</kbd> • Esc: release mouse</small>
+      </div>
+      <div class="hud">
+        <span class="pill" id="vibePill"><span class="dot"></span> Vibe: <strong id="vibe">Calm</strong></span>
+        <span class="pill">Time: <strong id="clock">9:08 PM</strong></span>
+        <span class="pill">Tasks: <strong id="tasks">3</strong></span>
+        <span class="pill">Flashlight: <strong id="flashHud">ON</strong></span>
+      </div>
+    </div>
+
+    <canvas id="c" width="960" height="540"></canvas>
+
+    <div class="dialogue">
+      <div class="speakerRow">
+        <div class="speaker" id="speaker">Narrator</div>
+        <div class="meta" id="meta">Click the game to capture the mouse</div>
+      </div>
+      <div class="text" id="dialogue">You’re home alone. Mom said: lock the doors and do three quick chores. Keep your phone loud.</div>
+      <div class="choices" id="choices"></div>
+    </div>
+  </div>
+
+  <div class="card phone">
+    <div class="topbar">
+      <div>
+        <b>Phone</b>
+        <small>Mom • Friend • Unknown</small>
+      </div>
+      <small style="color:var(--muted);font-size:12px">Type “ok” and press Send</small>
+    </div>
+    <div class="msgs" id="msgs"></div>
+    <div class="phoneFooter">
+      <input id="input" placeholder="Reply… (help)"/>
+      <button class="primary" id="send">Send</button>
+    </div>
+    <div class="hint" id="hint">
+      Tip: This is an original mini-episode. Smart move = lock up + call if it escalates.
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  // ---------- DOM ----------
+  const $ = (id)=>document.getElementById(id);
+  const canvas = $("c");
+  const ctx = canvas.getContext("2d");
+  const msgsEl = $("msgs");
+  const input = $("input");
+  const sendBtn = $("send");
+  const speakerEl = $("speaker");
+  const metaEl = $("meta");
+  const dialogueEl = $("dialogue");
+  const choicesEl = $("choices");
+
+  const vibeEl = $("vibe");
+  const vibePill = $("vibePill");
+  const clockEl = $("clock");
+  const tasksEl = $("tasks");
+  const flashHud = $("flashHud");
+
+  const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+  const rand = (a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+  const now = ()=>performance.now();
+  const TAU = Math.PI*2;
+
+  function esc(s){ return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;"); }
+
+  // ---------- Audio (procedural SFX) ----------
+  let audioCtx=null, master=null;
+  function initAudio(){
+    if(audioCtx) return;
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    master = audioCtx.createGain();
+    master.gain.value = 0.55;
+    master.connect(audioCtx.destination);
+  }
+  function beep(freq, dur, type="sine", gain=0.2){
+    if(!audioCtx) return;
+    const t0 = audioCtx.currentTime;
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, t0);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(gain, t0+0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+    o.connect(g); g.connect(master);
+    o.start(t0); o.stop(t0+dur+0.02);
+  }
+  function noiseBurst(dur=0.12, gain=0.18, freq=900){
+    if(!audioCtx) return;
+    const t0 = audioCtx.currentTime;
+    const bufferSize = Math.floor(audioCtx.sampleRate * dur);
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for(let i=0;i<bufferSize;i++) data[i] = (Math.random()*2-1) * (1 - i/bufferSize);
+    const src = audioCtx.createBufferSource();
+    src.buffer = buffer;
+    const g = audioCtx.createGain();
+    g.gain.setValueAtTime(gain, t0);
+    const f = audioCtx.createBiquadFilter();
+    f.type = "bandpass";
+    f.frequency.setValueAtTime(freq, t0);
+    src.connect(f); f.connect(g); g.connect(master);
+    src.start(t0);
+  }
+  const sfx = {
+    text(){ initAudio(); beep(920,0.05,"square",0.09); beep(1240,0.05,"square",0.07); },
+    step(){ initAudio(); noiseBurst(0.05, 0.09, 220); },
+    doorCreak(){ initAudio(); beep(160,0.18,"sawtooth",0.07); noiseBurst(0.10,0.10,500); },
+    rattle(){ initAudio(); noiseBurst(0.16,0.22,850); beep(130,0.14,"sawtooth",0.08); },
+    sting(){ initAudio(); beep(240,0.10,"sawtooth",0.12); beep(180,0.18,"sawtooth",0.16); noiseBurst(0.14,0.16,1200); },
+    pickup(){ initAudio(); beep(660,0.08,"triangle",0.08); beep(880,0.08,"triangle",0.06); },
+    toggle(){ initAudio(); beep(520,0.05,"square",0.05); },
+  };
+
+  // ---------- Phone ----------
+  function timeStr(){
+    const start = 21*60 + 8; // 9:08 PM
+    const t = start + state.minute;
+    const h24 = Math.floor(t/60)%24;
+    const m = t%60;
+    const ampm = h24>=12 ? "PM" : "AM";
+    let h = h24%12; if(h===0) h=12;
+    return `${h}:${String(m).padStart(2,"0")} ${ampm}`;
+  }
+  function addMsg(who, text){
+    const div = document.createElement("div");
+    div.className = "msg " + (who==="me" ? "me" : "them");
+    div.innerHTML = `<div>${esc(text)}</div><small>${who==="me"?"You":esc(who)} • ${timeStr()}</small>`;
+    msgsEl.appendChild(div);
+    msgsEl.scrollTop = msgsEl.scrollHeight;
+    if(who !== "me") sfx.text();
+  }
+
+  // ---------- Dialogue UI ----------
+  function setDialogue(speaker, text, buttons=[]){
+    speakerEl.textContent = speaker;
+    dialogueEl.textContent = text;
+    choicesEl.innerHTML = "";
+    for(const b of buttons){
+      const btn = document.createElement("button");
+      btn.textContent = b.label;
+      btn.className = b.kind || "";
+      btn.onclick = b.onClick;
+      choicesEl.appendChild(btn);
+    }
+  }
+
+  // ---------- Map ----------
+  // 0 empty, 1 wall
+  const MAP_W = 20, MAP_H = 14;
+  const mapRows = [
+    "11111111111111111111",
+    "10000000000000100001",
+    "10111101111110101101",
+    "10000100000000101001",
+    "11110111101110101001",
+    "10000100001000100001",
+    "10110101111011111001",
+    "10100100000010001001",
+    "10111101111110101001",
+    "10000001000000100001",
+    "10010001001000100001",
+    "10010001001000101101",
+    "10000000000000000001",
+    "11111111111111111111",
+  ];
+  const map = mapRows.map(r=>r.split("").map(ch=>ch==="1"?1:0));
+
+  function isWall(x,y){
+    const mx = Math.floor(x), my = Math.floor(y);
+    if(mx<0||my<0||mx>=MAP_W||my>=MAP_H) return true;
+    return map[my][mx] === 1;
+  }
+
+  // ---------- Objects: doors, tasks, items ----------
+  // Door opening animation uses "open" 0..1
+  const objects = [
+    // Doors (safety)
+    { id:"frontDoor", x: 16.5, y: 1.5, kind:"door", name:"Front Door", locked:false, open:0, opening:false, done:false },
+    { id:"backDoor",  x: 2.5,  y: 12.5, kind:"door", name:"Back Door", locked:false, open:0, opening:false, done:false },
+
+    // Tasks (3 chores)
+    { id:"curtains",  x: 15.5, y: 3.5, kind:"task", name:"Close Curtains", done:false },
+    { id:"trash",     x: 3.5,  y: 6.5, kind:"task", name:"Tie Trash Bag", done:false },
+    { id:"lights",    x: 9.5,  y: 10.5, kind:"task", name:"Turn On Hall Light", done:false },
+
+    // Items
+    { id:"key",       x: 7.5,  y: 5.5, kind:"item", name:"Spare Key", picked:false },
+    { id:"pepper",    x: 12.5, y: 12.5, kind:"item", name:"Mini Flashlight Battery", picked:false },
+    { id:"phoneChg",  x: 10.5, y: 2.5, kind:"item", name:"Phone Charger", picked:false },
+  ];
+
+  const inventory = new Set();
+
+  function tasksLeft(){
+    const needed = ["curtains","trash","lights"];
+    let n=0;
+    for(const id of needed){
+      const o = objects.find(o=>o.id===id);
+      if(o && !o.done) n++;
+    }
+    return n;
+  }
+
+  // ---------- Player + POV ----------
+  const player = {
+    x: 10.0, y: 11.5,
+    a: -Math.PI/2,
+    fov: Math.PI/3,
+    moveSpeed: 2.6,
+    rotSpeed: 2.4,
+    bob: 0,
+    bobPhase: 0,
+  };
+
+  // Pointer lock
+  let pointerLocked=false;
+  canvas.addEventListener("click", () => {
+    if(state.finished) return;
+    initAudio();
+    canvas.requestPointerLock?.();
+  });
+  document.addEventListener("pointerlockchange", () => {
+    pointerLocked = (document.pointerLockElement === canvas);
+    metaEl.textContent = pointerLocked ? "Mouse captured • Esc releases" : "Click the game to capture the mouse";
+  });
+  document.addEventListener("mousemove", (e) => {
+    if(!pointerLocked || !state.started || state.finished) return;
+    player.a += e.movementX * 0.0022;
+  });
+
+  const keys = new Set();
+  window.addEventListener("keydown", (e)=>{
+    const k = e.key.toLowerCase();
+    keys.add(k);
+    if(k==="e") interact();
+    if(k==="f") toggleFlash();
+    if(k==="i") showInventory();
+  });
+  window.addEventListener("keyup", (e)=>keys.delete(e.key.toLowerCase()));
+
+  // Flashlight
+  const flash = {
+    on:true,
+    battery: 1.0,        // drains slowly
+    drainPerMin: 0.010,  // battery drain per in-game minute
+    cone: 0.42,          // radians half-angle
+    range: 6.8
+  };
+  function toggleFlash(){
+    if(!state.started || state.finished) return;
+    if(flash.battery <= 0.02){
+      sfx.toggle();
+      setDialogue("You", "Flashlight… dead.", []);
+      flash.on = false;
+      flashHud.textContent = "OFF";
+      return;
+    }
+    flash.on = !flash.on;
+    sfx.toggle();
+    flashHud.textContent = flash.on ? "ON" : "OFF";
+    setDialogue("Narrator", flash.on ? "Flashlight on." : "Flashlight off.", []);
+  }
+
+  // ---------- Story State ----------
+  const state = {
+    minute: 0,
+    dread: 0,
+    started:false,
+    finished:false,
+
+    beat:0,
+    sawUnknown:false,
+    doorbell:false,
+    backDoorWeird:false,
+    handleJiggle:false,
+    canCall:false,
+    called:false,
+    inventoryShown:false,
+
+    lastStepSfx:0,
+  };
+
+  // ---------- HUD ----------
+  function updateHUD(){
+    clockEl.textContent = timeStr();
+    tasksEl.textContent = tasksLeft();
+
+    const d=state.dread;
+    let vibe="Calm", warn=false;
+    if(d>=70){ vibe="PANIC"; warn=true; }
+    else if(d>=45){ vibe="On Edge"; warn=true; }
+    else if(d>=25){ vibe="Uneasy"; }
+    vibeEl.textContent=vibe;
+    if(warn) vibePill.classList.add("warn"); else vibePill.classList.remove("warn");
+  }
+
+  // ---------- Raycasting Renderer ----------
+  const RAYS = 360;
+  function castRay(ax){
+    const sin = Math.sin(ax), cos = Math.cos(ax);
+    let dist = 0;
+    const step = 0.02;
+    for(let i=0;i<3200;i++){
+      dist += step;
+      const x = player.x + cos * dist;
+      const y = player.y + sin * dist;
+      const mx = Math.floor(x), my = Math.floor(y);
+      if(mx<0||my<0||mx>=MAP_W||my>=MAP_H) break;
+      if(map[my][mx] === 1){
+        // side-ish detection for shading
+        const fx = x - mx, fy = y - my;
+        const side = (fx<0.02||fx>0.98) ? 1 : (fy<0.02||fy>0.98) ? 2 : 0;
+        return {hit:true, dist, side};
+      }
+    }
+    return {hit:false, dist:999, side:0};
+  }
+
+  function draw(){
+    const w=canvas.width, h=canvas.height;
+
+    // Head bob affects horizon
+    const horizonShift = player.bob * 14; // pixels
+
+    // ceiling
+    ctx.fillStyle = "#05070b";
+    ctx.fillRect(0,0,w,h/2 + horizonShift);
+
+    // floor (simple checker-ish pattern)
+    ctx.fillStyle = "#060a12";
+    ctx.fillRect(0,h/2 + horizonShift,w,h/2 - horizonShift);
+
+    // subtle floor stripes for depth
+    for(let y=h/2 + horizonShift; y<h; y+=6){
+      const a = clamp((y-(h/2+horizonShift))/ (h/2), 0, 1);
+      ctx.fillStyle = `rgba(255,255,255,${0.018*(1-a)})`;
+      ctx.fillRect(0,y,w,1);
+    }
+
+    // Raycast walls
+    const depthBuffer = new Array(RAYS).fill(999);
+    for(let i=0;i<RAYS;i++){
+      const rayA = player.a - player.fov/2 + (i/(RAYS-1))*player.fov;
+      const r = castRay(rayA);
+      if(!r.hit) continue;
+
+      // fish-eye correction
+      const corrected = r.dist * Math.cos(rayA - player.a);
+      depthBuffer[i] = corrected;
+
+      const wallH = clamp((h * 0.92) / (corrected+0.0001), 0, h*1.3);
+      const x = (i/RAYS)*w;
+      const colW = (w/RAYS) + 1;
+
+      // procedural “texture”: base shade + vertical variation + side darkening
+      const shade = clamp(1 - corrected/8.2, 0.05, 1);
+      const base = 25 + Math.floor(110*shade);
+      const sideDark = (r.side ? 0.78 : 1.0);
+      const wobble = Math.floor(10*Math.sin((i/18) + (corrected*0.9)));
+
+      let rr = Math.floor((base+wobble)*sideDark);
+      let gg = Math.floor((base+12+wobble)*sideDark);
+      let bb = Math.floor((base+26+wobble)*sideDark);
+
+      // flashlight effect
+      const light = flashlightAmount(rayA, corrected);
+      rr = Math.floor(rr* (0.55 + 0.45*light));
+      gg = Math.floor(gg* (0.55 + 0.45*light));
+      bb = Math.floor(bb* (0.55 + 0.45*light));
+
+      ctx.fillStyle = `rgb(${rr},${gg},${bb})`;
+      ctx.fillRect(x, (h-wallH)/2 + horizonShift, colW, wallH);
+
+      // subtle vertical lines (texture)
+      if(i%5===0){
+        ctx.fillStyle = `rgba(0,0,0,${0.06*(1-shade)})`;
+        ctx.fillRect(x, (h-wallH)/2 + horizonShift, colW, wallH);
+      }
+    }
+
+    // Draw objects (billboards) sorted far->near
+    drawObjects(depthBuffer, horizonShift);
+
+    // Vignette + flashlight cone overlay
+    drawLightingOverlay(horizonShift);
+
+    // Crosshair
+    ctx.strokeStyle="rgba(255,255,255,.55)";
+    ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.moveTo(w/2-8,h/2+horizonShift); ctx.lineTo(w/2+8,h/2+horizonShift);
+    ctx.moveTo(w/2,h/2-8+horizonShift); ctx.lineTo(w/2,h/2+8+horizonShift);
+    ctx.stroke();
+
+    // Interaction prompt
+    const target = getTargetObject();
+    if(target){
+      ctx.fillStyle="rgba(0,0,0,.45)";
+      ctx.fillRect(12,h-44, w-24, 32);
+      ctx.fillStyle="rgba(255,255,255,.92)";
+      ctx.font="14px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+      ctx.fillText(`Press E: ${targetPrompt(target)}`, 22, h-22);
+    }
+  }
+
+  function flashlightAmount(rayA, dist){
+    if(!flash.on || flash.battery<=0.02) return 0.22; // ambient
+    const diff = Math.atan2(Math.sin(rayA-player.a), Math.cos(rayA-player.a));
+    const inCone = Math.abs(diff) <= flash.cone;
+    if(!inCone) return 0.25;
+    const rangeFactor = clamp(1 - dist/flash.range, 0, 1);
+    const centerFactor = clamp(1 - (Math.abs(diff)/flash.cone), 0, 1);
+    return 0.25 + 0.9*(rangeFactor*centerFactor);
+  }
+
+  function drawLightingOverlay(horizonShift){
+    const w=canvas.width, h=canvas.height;
+
+    // global vignette
+    const vg = ctx.createRadialGradient(w/2,h/2+horizonShift,h*0.15, w/2,h/2+horizonShift,h*0.75);
+    vg.addColorStop(0,"rgba(0,0,0,0)");
+    vg.addColorStop(1, flash.on ? "rgba(0,0,0,0.55)" : "rgba(0,0,0,0.72)");
+    ctx.fillStyle = vg;
+    ctx.fillRect(0,0,w,h);
+
+    // cone highlight (only if flashlight is on)
+    if(flash.on && flash.battery>0.02){
+      ctx.save();
+      ctx.translate(w/2, h/2 + horizonShift);
+      ctx.rotate(0);
+      ctx.globalCompositeOperation = "lighter";
+      const g = ctx.createRadialGradient(0,0, 10, 0,0, Math.min(w,h)*0.55);
+      const strength = 0.16 + 0.18*flash.battery;
+      g.addColorStop(0, `rgba(120,170,255,${strength})`);
+      g.addColorStop(1, `rgba(120,170,255,0)`);
+      ctx.fillStyle = g;
+
+      // draw a triangle-ish cone
+      ctx.beginPath();
+      ctx.moveTo(0,0);
+      ctx.arc(0,0, Math.min(w,h)*0.62, -flash.cone, flash.cone);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+      ctx.globalCompositeOperation = "source-over";
+    }
+
+    // battery low warning subtle
+    if(flash.battery < 0.22){
+      ctx.fillStyle = `rgba(251,113,133,${0.07*(1-(flash.battery/0.22))})`;
+      ctx.fillRect(0,0,w,h);
+    }
+  }
+
+  function drawObjects(depthBuffer, horizonShift){
+    const w=canvas.width, h=canvas.height;
+    const vis = [];
+
+    for(const o of objects){
+      if(o.kind==="item" && o.picked) continue;
+
+      const dx=o.x-player.x, dy=o.y-player.y;
+      const distRaw=Math.hypot(dx,dy);
+      if(distRaw>7.2) continue;
+
+      const ang = Math.atan2(dy,dx);
+      const rel = Math.atan2(Math.sin(ang-player.a), Math.cos(ang-player.a));
+      if(Math.abs(rel) > player.fov/2 + 0.25) continue;
+
+      // occlusion via ray
+      const rayIndex = Math.floor(((rel + player.fov/2)/player.fov) * (RAYS-1));
+      const corrected = distRaw * Math.cos(rel);
+      if(rayIndex>=0 && rayIndex<RAYS && depthBuffer[rayIndex] < corrected-0.06) continue;
+
+      vis.push({o, rel, dist:corrected});
+    }
+
+    vis.sort((a,b)=>b.dist-a.dist);
+
+    for(const v of vis){
+      const {o, rel, dist} = v;
+      const size = clamp((h*0.65)/(dist+0.0001), 12, h*0.62);
+
+      const xCenter = (0.5 + (rel/player.fov))*w;
+      const x = xCenter - size*0.18;
+      const y = (h - size)/2 + horizonShift;
+
+      // door openness affects thickness
+      let widthMul = 0.36;
+      let heightMul = 1.00;
+
+      // color by kind
+      let color = "rgba(170,180,220,.85)";
+      if(o.kind==="task") color = o.done ? "rgba(52,211,153,.85)" : "rgba(180,180,220,.85)";
+      if(o.kind==="item") color = "rgba(96,165,250,.85)";
+      if(o.kind==="door") color = o.locked ? "rgba(52,211,153,.85)" : "rgba(251,113,133,.85)";
+
+      // Door animation: when open increases, door becomes “thin”
+      if(o.kind==="door"){
+        const open = o.open; // 0 closed, 1 open
+        widthMul = clamp(0.36*(1-open) + 0.10*open, 0.10, 0.36);
+        heightMul = 1.0;
+      }
+
+      // shadow
+      ctx.fillStyle="rgba(0,0,0,.25)";
+      ctx.fillRect(x+3,y+3,size*widthMul,size*heightMul);
+
+      // apply flashlight shading
+      const light = flashlightAmount(player.a+rel, dist);
+      const a = 0.50 + 0.50*light;
+
+      // sprite body
+      ctx.fillStyle = color.replace("0.85", String(0.55 + 0.35*a));
+      ctx.fillRect(x,y,size*widthMul,size*heightMul);
+
+      // label strip
+      ctx.fillStyle = "rgba(0,0,0,.28)";
+      ctx.fillRect(x,y,size*widthMul, 18);
+      ctx.fillStyle = "rgba(255,255,255,.92)";
+      ctx.font="12px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+      const tag = (o.kind==="door") ? (o.locked ? "LOCKED" : "UNLOCKED") : (o.kind==="item" ? "ITEM" : "TASK");
+      ctx.fillText(tag, x+6, y+13);
+
+      // tiny icon hint
+      if(o.kind==="item"){
+        ctx.fillStyle="rgba(255,255,255,.28)";
+        ctx.fillRect(x+6, y+24, size*widthMul-12, 3);
+      }
+    }
+  }
+
+  function targetPrompt(o){
+    if(o.kind==="door"){
+      if(o.opening) return `${o.name} (moving...)`;
+      if(o.open>0.65) return `${o.name} (close)`;
+      return o.locked ? `${o.name} (unlock/lock check)` : `${o.name} (open / lock)`;
+    }
+    if(o.kind==="task") return o.done ? `${o.name} (done)` : `${o.name} (do it)`;
+    if(o.kind==="item") return `Pick up: ${o.name}`;
+    return o.name;
+  }
+
+  // ---------- Interaction ----------
+  function getTargetObject(){
+    let best=null;
+    for(const o of objects){
+      if(o.kind==="item" && o.picked) continue;
+      const dx=o.x-player.x, dy=o.y-player.y;
+      const dist=Math.hypot(dx,dy);
+      if(dist>2.2) continue;
+      const ang=Math.atan2(dy,dx);
+      const diff=Math.atan2(Math.sin(ang-player.a), Math.cos(ang-player.a));
+      if(Math.abs(diff)>0.20) continue;
+
+      // wall between
+      const r = castRay(ang);
+      if(r.hit && r.dist < dist-0.06) continue;
+
+      if(!best || dist<best.dist) best={o,dist};
+    }
+    return best ? best.o : null;
+  }
+
+  function interact(){
+    if(!state.started || state.finished) return;
+    const t = getTargetObject();
+    if(!t) return;
+
+    if(t.kind==="item"){
+      t.picked = true;
+      inventory.add(t.id);
+      sfx.pickup();
+      setDialogue("You", `Picked up: ${t.name}. (Press I for inventory)`, []);
+      // special effects
+      if(t.id==="pepper"){
+        flash.battery = clamp(flash.battery + 0.35, 0, 1);
+        setDialogue("You", "Found extra batteries. Flashlight feels steadier.", []);
+      }
+      if(t.id==="phoneChg"){
+        setDialogue("You", "Phone charger. If I have to call, I won’t die at 1%.", []);
+      }
+      updateHUD();
+      return;
+    }
+
+    if(t.kind==="task"){
+      if(t.done){
+        setDialogue("Narrator", `You already did that.`, []);
+        return;
+      }
+      t.done=true;
+      if(t.id==="curtains"){
+        state.dread = Math.max(0, state.dread-3);
+        setDialogue("You", "Curtains closed. I don’t like the window anyway.", []);
+      } else if(t.id==="trash"){
+        state.dread += 7;
+        setDialogue("You", "Trash tied up. The kitchen feels… colder.", []);
+      } else if(t.id==="lights"){
+        state.dread = Math.max(0, state.dread-10);
+        setDialogue("You", "Hall light on. Okay. Better.", []);
+      } else {
+        setDialogue("You","Done.",[]);
+      }
+      updateHUD();
+      checkProgress();
+      return;
+    }
+
+    if(t.kind==="door"){
+      // Two-step: if not locked, lock it; then allow open/close
+      if(!t.locked && t.open < 0.1){
+        t.locked = true;
+        sfx.doorCreak();
+        setDialogue("Narrator", `${t.name} locked.`, []);
+        state.dread = Math.max(0, state.dread-1);
+        if(t.id==="backDoor" && state.backDoorWeird){
+          state.dread += 6;
+          sfx.rattle();
+          setDialogue("Narrator", "The back latch takes extra force… like it was tested recently.", []);
+        }
+        updateHUD();
+        checkProgress();
+        return;
+      }
+
+      // Door open/close animation
+      t.opening = true;
+      sfx.doorCreak();
+      const goingOpen = (t.open < 0.5);
+      setDialogue("Narrator", goingOpen ? "Door opens…" : "Door closes…", []);
+      // actual animation happens in update loop (we set a target)
+      t._targetOpen = goingOpen ? 1 : 0;
+      updateHUD();
+      checkBadChoices(t);
+      return;
+    }
+  }
+
+  function checkBadChoices(doorObj){
+    // If doorbell happened and player opens front door -> bad ending
+    if(doorObj.id==="frontDoor" && state.doorbell && doorObj._targetOpen===1){
+      // not instant, but very likely bad soon
+      state.dread += 16;
+      sfx.sting();
+      setDialogue("Narrator","You should NOT open the door.", []);
+    }
+  }
+
+  // Inventory UI
+  function showInventory(){
+    if(!state.started || state.finished) return;
+    const items = [...inventory].map(id => objects.find(o=>o.id===id)?.name || id);
+    const list = items.length ? items.join(", ") : "(empty)";
+    state.inventoryShown = true;
+    setDialogue("Inventory", list, [
+      {label:"Close", kind:"primary", onClick: ()=>setDialogue("Narrator","…", [])}
+    ]);
+  }
+
+  // ---------- Movement / Collision / Head bob ----------
+  function moveAndCollide(dt){
+    let forward=0, strafe=0;
+    if(keys.has("w")||keys.has("arrowup")) forward += 1;
+    if(keys.has("s")||keys.has("arrowdown")) forward -= 1;
+    if(keys.has("a")) strafe -= 1;
+    if(keys.has("d")) strafe += 1;
+
+    // rotate with arrows if mouse not locked
+    if(!pointerLocked){
+      if(keys.has("arrowleft")) player.a -= player.rotSpeed*dt;
+      if(keys.has("arrowright")) player.a += player.rotSpeed*dt;
+    }
+
+    const moving = Math.abs(forward)+Math.abs(strafe) > 0.1;
+    const speed = player.moveSpeed * dt * (keys.has("shift") ? 1.35 : 1.0);
+
+    const cos=Math.cos(player.a), sin=Math.sin(player.a);
+    let nx = player.x + (cos*forward - sin*strafe) * speed;
+    let ny = player.y + (sin*forward + cos*strafe) * speed;
+
+    const pad=0.18;
+    if(!isWall(nx, player.y) && !isWall(nx+Math.sign(nx-player.x)*pad, player.y)) player.x = nx;
+    if(!isWall(player.x, ny) && !isWall(player.x, ny+Math.sign(ny-player.y)*pad)) player.y = ny;
+
+    // head bob
+    if(moving){
+      player.bobPhase += dt*9.5*(keys.has("shift")?1.2:1.0);
+      player.bob = Math.sin(player.bobPhase)*0.35;
+      if(now()-state.lastStepSfx>260){
+        sfx.step();
+        state.lastStepSfx=now();
+      }
+    } else {
+      player.bobPhase *= 0.98;
+      player.bob *= 0.90;
+      if(Math.abs(player.bob) < 0.01) player.bob = 0;
+    }
+  }
+
+  // Door animation
+  function updateDoors(dt){
+    for(const o of objects){
+      if(o.kind!=="door") continue;
+      if(!o.opening) continue;
+
+      const target = o._targetOpen ?? 0;
+      const spd = 1.6; // per second
+      o.open += (target - o.open) * clamp(spd*dt, 0, 1);
+
+      if(Math.abs(o.open - target) < 0.02){
+        o.open = target;
+        o.opening = false;
+      }
+    }
+  }
+
+  // ---------- Story beats (original) ----------
+  function storyTick(minutes){
+    for(let i=0;i<minutes;i++){
+      state.minute += 1;
+
+      // battery drain
+      flash.battery = clamp(flash.battery - flash.drainPerMin, 0, 1);
+      if(flash.battery <= 0.02){
+        flash.on = false;
+        flashHud.textContent = "OFF";
+      }
+
+      const m = state.minute;
+
+      // messages
+      if(m===1) addMsg("Mom","I’m stepping into the store. Doors locked?");
+      if(m===3) addMsg("Mom","Do your three chores then chill. Don’t open the door for anyone.");
+      if(m===5) addMsg("Friend","If it gets weird, call your mom. Seriously.");
+
+      // subtle weirdness
+      if(m===7 && !state.backDoorWeird){
+        state.backDoorWeird = true;
+        state.dread += 6;
+        setDialogue("Narrator","Somewhere in the house: a tiny click. Like a latch testing itself.", []);
+      }
+
+      // unknown text
+      if(m===10 && !state.sawUnknown){
+        state.sawUnknown = true;
+        state.canCall = true;
+        addMsg("Unknown","dont open it");
+        state.dread += 14;
+        sfx.sting();
+        setDialogue("Narrator","A text from an unknown number. Your stomach drops.", [
+          {label:"Text Mom", kind:"primary", onClick: ()=>{
+            addMsg("me","Mom… I got a weird text from an unknown number.");
+            addMsg("Mom","Lock both doors. Stay inside. I’m leaving right now.");
+            state.dread = Math.max(0, state.dread-6);
+            state.canCall = true;
+            setDialogue("Mom","Stay away from the doors. I’m coming back.", []);
+          }},
+          {label:"Ignore", onClick: ()=>{
+            state.dread += 2;
+            setDialogue("You","Nope. Not replying.", []);
+          }},
+          {label:"Who is this?", kind:"danger", onClick: ()=>{
+            state.dread += 10;
+            addMsg("me","Who is this?");
+            addMsg("Unknown","close your curtains.");
+            sfx.sting();
+            setDialogue("Narrator","That reply makes your skin crawl.", []);
+          }},
+        ]);
+      }
+
+      // doorbell
+      if(m===13 && !state.doorbell){
+        state.doorbell = true;
+        state.dread += 18;
+        sfx.rattle(); sfx.sting();
+        setDialogue("Narrator","DING DONG. The doorbell rings once.", [
+          {label:"Call Mom", kind:"danger", onClick: callMom},
+          {label:"Stay still", kind:"primary", onClick: ()=>{
+            setDialogue("You","I’m not moving.", []);
+            state.dread += 3;
+          }},
+        ]);
+      }
+
+      // handle jiggle if front door unlocked
+      if(m===15 && state.doorbell && !state.handleJiggle){
+        state.handleJiggle = true;
+        const front = objects.find(o=>o.id==="frontDoor");
+        if(front && !front.locked){
+          state.dread += 16;
+          sfx.rattle(); sfx.sting();
+          setDialogue("Narrator","The front handle jiggles. Not hard. Just… testing.", [
+            {label:"Lock front door", kind:"primary", onClick: ()=>{
+              // hint player to lock it
+              setDialogue("Narrator","Find the front door and press E to lock it.", []);
+            }},
+            {label:"Call Mom", kind:"danger", onClick: callMom}
+          ]);
+        } else {
+          state.dread += 6;
+          sfx.rattle();
+          setDialogue("Narrator","Something bumps the front door. Once. Then silence.", [
+            {label:"Call Mom", kind:"danger", onClick: callMom},
+            {label:"Wait", kind:"primary", onClick: ()=>setDialogue("You","Just… wait.", [])}
+          ]);
+        }
+      }
+
+      // if too long, survival ending
+      if(m>=26 && !state.finished){
+        // if player did chores + locked doors + called -> best ending
+        const choresDone = tasksLeft()===0;
+        const front = objects.find(o=>o.id==="frontDoor")?.locked;
+        const back = objects.find(o=>o.id==="backDoor")?.locked;
+
+        if(choresDone && front && back && state.called){
+          end("SAFE", "You did everything right: chores done, doors locked, you called for help. Mom arrives with a neighbor. No hero moves. Just smart choices.");
+        } else {
+          end("SURVIVED", "Time passes. Nothing explodes into a monster… which is somehow worse. Mom gets home and locks every lock twice.");
+        }
+      }
+
+      state.dread = clamp(state.dread, 0, 100);
+    }
+  }
+
+  function callMom(){
+    if(state.called) return;
+    state.called = true;
+    addMsg("me","Calling you now.");
+    addMsg("Mom","Stay inside. Lock both doors. I’m calling the neighbor and coming back NOW.");
+    state.dread = Math.max(0, state.dread-10);
+    setDialogue("Mom","Stay away from the doors. I’m almost there.", []);
+  }
+
+  function checkProgress(){
+    // If player opens front door after doorbell => bad ending
+    const front = objects.find(o=>o.id==="frontDoor");
+    if(state.doorbell && front && front.open > 0.65 && !state.finished){
+      end("BAD CHOICE", "You opened the door after the doorbell. The cold air hits your face… and you realize you just gave someone permission.");
+      return;
+    }
+
+    // If dread max => panic ending
+    if(state.dread >= 100 && !state.finished){
+      end("PANIC", "Your brain hits full panic mode. Every sound becomes a threat. You freeze.");
+      return;
+    }
+
+    // Win prompt if chores done + doors locked after doorbell
+    const choresDone = tasksLeft()===0;
+    const frontLocked = objects.find(o=>o.id==="frontDoor")?.locked;
+    const backLocked  = objects.find(o=>o.id==="backDoor")?.locked;
+
+    if(!state.finished && choresDone && frontLocked && backLocked && state.doorbell && !state.called){
+      setDialogue("Narrator","You did the smart things. Now do the smartest thing: call Mom.", [
+        {label:"Call Mom", kind:"danger", onClick: callMom},
+        {label:"Wait", kind:"primary", onClick: ()=>setDialogue("You","I’m waiting.", [])}
+      ]);
+    }
+
+    if(!state.finished && choresDone && frontLocked && backLocked && state.called){
+      setDialogue("Narrator","Locked. Chores done. Help is coming. Now… wait.", [
+        {label:"Wait", kind:"primary", onClick: ()=>end("SAFE", "You waited. Mom arrives with a neighbor. You’re safe.")},
+      ]);
+    }
+  }
+
+  function end(title, text){
+    state.finished = true;
+    document.exitPointerLock?.();
+    setDialogue("Ending: " + title, text, [
+      {label:"Restart", kind:"primary", onClick: resetAll},
+      {label:"Release mouse", onClick: ()=>document.exitPointerLock?.()},
+    ]);
+  }
+
+  // ---------- Main loop time ----------
+  let last = performance.now();
+  let timeAcc = 0;
+
+  function update(dt){
+    if(!state.started || state.finished) return;
+
+    moveAndCollide(dt);
+    updateDoors(dt);
+
+    // pass time every ~2.8s = 1 minute
+    timeAcc += dt;
+    if(timeAcc >= 2.8){
+      const mins = Math.floor(timeAcc/2.8);
+      timeAcc -= mins*2.8;
+      storyTick(mins);
+      updateHUD();
+      checkProgress();
+    }
+
+    // low battery flicker (tiny dread)
+    if(flash.battery < 0.15 && flash.on){
+      state.dread += 0.03;
+    }
+  }
+
+  function loop(t){
+    const dt = Math.min(0.033, (t-last)/1000);
+    last = t;
+    update(dt);
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  // ---------- Phone typing ----------
+  function handleSend(){
+    const t = input.value.trim();
+    if(!t) return;
+    initAudio();
+    addMsg("me", t);
+    input.value = "";
+
+    const lower = t.toLowerCase();
+    if(lower === "help"){
+      addMsg("Mom","You can type: ok / where are you / i’m calling you");
+      return;
+    }
+    if(lower === "ok" || lower==="okay" || lower==="k"){
+      addMsg("Mom","Good. Doors locked. Don’t open anything.");
+      state.dread = Math.max(0, state.dread-2);
+      updateHUD();
+      return;
+    }
+    if(lower.includes("where") && lower.includes("you")){
+      addMsg("Mom","About 16 minutes away. Stay inside.");
+      return;
+    }
+    if(lower.includes("calling")){
+      callMom();
+      return;
+    }
+    addMsg("Mom","Okay. Keep me posted.");
+  }
+  sendBtn.addEventListener("click", handleSend);
+  input.addEventListener("keydown",(e)=>{ if(e.key==="Enter") handleSend(); });
+
+  // ---------- Start / Reset ----------
+  function startGame(){
+    state.started = true;
+    setDialogue("Narrator",
+      "Goal: Close curtains, tie trash, turn on hall light. Lock both doors. Flashlight: F. Inventory: I.",
+      [
+        {label:"Let’s go", kind:"primary", onClick: ()=>setDialogue("Narrator","Do the chores. Keep your phone loud.", [])},
+        {label:"Controls", onClick: ()=>setDialogue("Controls","WASD move, mouse look (click game), E interact, F flashlight, I inventory, Esc release mouse.", [{label:"Back", kind:"primary", onClick: ()=>setDialogue("Narrator","Do the chores. Keep your phone loud.", [])}])},
+      ]
+    );
+  }
+
+  function resetAll(){
+    // reset state
+    state.minute=0; state.dread=0; state.started=false; state.finished=false;
+    state.sawUnknown=false; state.doorbell=false; state.backDoorWeird=false; state.handleJiggle=false;
+    state.canCall=false; state.called=false; state.inventoryShown=false;
+    state.lastStepSfx=0;
+    timeAcc=0;
+
+    // reset player
+    player.x=10.0; player.y=11.5; player.a=-Math.PI/2;
+    player.bob=0; player.bobPhase=0;
+
+    // reset flashlight
+    flash.on=true; flash.battery=1.0;
+    flashHud.textContent="ON";
+
+    // reset objects / inventory
+    inventory.clear();
+    for(const o of objects){
+      if(o.kind==="door"){
+        o.locked=false; o.open=0; o.opening=false; o._targetOpen=0;
+      }
+      if(o.kind==="task"){ o.done=false; }
+      if(o.kind==="item"){ o.picked=false; }
+    }
+
+    msgsEl.innerHTML="";
+    addMsg("Mom","Hey—be home soon. Lock both doors and do three quick chores.");
+    addMsg("Friend","Home alone night = snacks + show. You got this.");
+    setDialogue("Narrator","Click the game to capture the mouse. Then hit Start.", [
+      {label:"Start", kind:"primary", onClick: startGame},
+      {label:"Controls", onClick: ()=>setDialogue("Controls","WASD move, mouse look (click game), E interact, F flashlight, I inventory, Esc release mouse.", [{label:"Back", kind:"primary", onClick: ()=>resetAll()}])},
+    ]);
+
+    updateHUD();
+  }
+
+  // pointer lock safety
+  window.addEventListener("keydown",(e)=>{
+    if(e.key==="Escape"){
+      // releasing mouse is handled by browser; we just update hint next tick
+    }
+  });
+
+  // ---------- Interaction keys that should work even before start ----------
+  window.addEventListener("keydown",(e)=>{
+    const k=e.key.toLowerCase();
+    if(k==="enter" && !state.started && !state.finished){
+      // optional: pressing Enter starts
+    }
+  });
+
+  // start
+  initAudio(); // harmless
+  resetAll();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
