@@ -332,13 +332,15 @@
   canvas.addEventListener("click", ()=>{ if(state.finished) return; initAudio(); canvas.requestPointerLock?.(); });
   document.addEventListener("pointerlockchange", ()=>{
     pointerLocked=(document.pointerLockElement===canvas);
-    metaEl.textContent=pointerLocked?"Mouse captured • Esc releases":"Click the game to capture the mouse";
+    metaEl.textContent=pointerLocked?"Mouse captured • Esc releases":"Press Return to start • Click the game to capture the mouse";
   });
   document.addEventListener("mousemove",(e)=>{
     if(pointerLocked && state.started && !state.finished) player.a += e.movementX*0.0022;
   });
 
   const keys=new Set();
+
+  // Movement / interact keys
   window.addEventListener("keydown",(e)=>{
     const k=e.key.toLowerCase();
     keys.add(k);
@@ -346,6 +348,15 @@
     if(k==="f") toggleFlash();
   });
   window.addEventListener("keyup",(e)=>keys.delete(e.key.toLowerCase()));
+
+  // NEW: Press Return/Enter to start (but not while typing in the phone input)
+  window.addEventListener("keydown",(e)=>{
+    if (document.activeElement === input) return;
+    if ((e.key === "Enter" || e.code === "Enter") && !state.started && !state.finished){
+      e.preventDefault();
+      start();
+    }
+  });
 
   // ----------------- Flashlight -----------------
   const flash={on:true,battery:1.0,drainPerMin:0.012,cone:0.44,range:8.4};
@@ -499,9 +510,6 @@
     for(const o of objs){
       if(o.floor !== undefined && o.floor !== state.floor) continue;
       if(o.kind==="item" && o.picked) continue;
-      if(o.kind==="task" && o.done) {
-        // still show faintly sometimes: keep it hidden for clarity
-      }
 
       const dx=o.x-player.x, dy=o.y-player.y;
       const dRaw=Math.hypot(dx,dy);
@@ -902,7 +910,9 @@
     addMsg("Carson’s Mom","Thanks again. Quick list: lights, TV, trash, upstairs window. Lock both doors.");
     addMsg("Friend","This is chill. Get in, do the list, leave. Easy money.");
 
-    setDialogue("Narrator","Click the game to capture the mouse. Then press Start.",[
+    // NEW start screen text
+    metaEl.textContent = "Press Return to start • Click the game to capture the mouse";
+    setDialogue("Narrator","Press The Return Button to Play",[
       {label:"Start",kind:"primary",onClick:start}
     ]);
     updateHUD();
